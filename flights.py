@@ -26,15 +26,14 @@ pessoas_lista = [
 ]
 destino_viagem = 'FCO'
 
-
 # ============================================================
-# FUNÇÃO DE CÁLCULO DE CUSTO TOTAL
+# FUNÇÃO DE CÁLCULO DE CUSTO
 # ============================================================
 
 def calcula_custo(agenda):
     total_passagens = 0
-    chegadas_destino = []
-    partidas_destino = []
+    chegadas = []
+    partidas = []
 
     for i in range(len(pessoas_lista)):
         codigo_origem = pessoas_lista[i][1]
@@ -42,21 +41,20 @@ def calcula_custo(agenda):
         idx_ida = agenda[i * 2]
         voo_ida = voos_disponiveis[(codigo_origem, destino_viagem)][idx_ida]
         total_passagens += voo_ida[2]
-        chegadas_destino.append(voo_ida[1])
+        chegadas.append(voo_ida[1])
 
         idx_volta = agenda[i * 2 + 1]
         voo_volta = voos_disponiveis[(destino_viagem, codigo_origem)][idx_volta]
         total_passagens += voo_volta[2]
-        partidas_destino.append(voo_volta[0])
+        partidas.append(voo_volta[0])
 
-    ultima_chegada = max(chegadas_destino)
-    espera_ida = sum((ultima_chegada - h) / 60 * custo_espera for h in chegadas_destino)
+    ultima_chegada = max(chegadas)
+    espera_ida = sum((ultima_chegada - h) / 60 * custo_espera for h in chegadas)
 
-    primeira_partida = min(partidas_destino)
-    espera_volta = sum((h - primeira_partida) / 60 * custo_espera for h in partidas_destino)
+    primeira_partida = min(partidas)
+    espera_volta = sum((h - primeira_partida) / 60 * custo_espera for h in partidas)
 
     return total_passagens + espera_ida + espera_volta
-
 
 # ============================================================
 # HILL CLIMB
@@ -86,7 +84,6 @@ def hill_climb(max_iter=1000):
         historico.append(melhor_custo)
 
     return solucao_atual, melhor_custo, historico
-
 
 # ============================================================
 # RECOZIMENTO SIMULADO
@@ -118,7 +115,6 @@ def recozimento_simulado(temp_inicial=10000.0, taxa_resfriamento=0.95):
         temp *= taxa_resfriamento
 
     return solucao_atual, melhor_custo, historico
-
 
 # ============================================================
 # GENÉTICO
@@ -160,7 +156,6 @@ def genetico(qtd_pop=50, qtd_elite=10, qtd_geracoes=100):
     )
     return melhor_solucao, melhor_custo
 
-
 # ============================================================
 # EXECUÇÃO
 # ============================================================
@@ -173,7 +168,6 @@ print("=== RESULTADOS ===")
 print(f"Hill Climb: {custo_hill:.2f}")
 print(f"Recozimento Simulado: {custo_annealing:.2f}")
 print(f"Genético: {custo_gen:.2f}")
-
 
 # ============================================================
 # GRÁFICOS
@@ -201,7 +195,6 @@ plt.grid(True, linestyle='--', alpha=0.7)
 plt.tight_layout()
 plt.show()
 
-
 # ============================================================
 # MOSTRAR SOLUÇÃO
 # ============================================================
@@ -218,9 +211,6 @@ print("\n--- Recozimento Simulado ---")
 mostra_solucao(sol_annealing)
 print("\n--- Genético ---")
 mostra_solucao(sol_gen)
-
-# -------------------------------# -------------------------------
-import matplotlib.pyplot as plt
 
 # ============================================================
 # HISTÓRICO DO GENÉTICO
@@ -251,4 +241,26 @@ def historico_genetico(qtd_pop=50, qtd_elite=10, qtd_geracoes=100):
             if random.random() < 0.1:
                 i = random.randint(0, len(filho) - 1)
                 pessoa_idx = i // 2
-                if i % 
+                if i % 2 == 0:
+                    filho[i] = random.randint(0, len(voos_disponiveis[(pessoas_lista[pessoa_idx][1], destino_viagem)]) - 1)
+                else:
+                    filho[i] = random.randint(0, len(voos_disponiveis[(destino_viagem, pessoas_lista[pessoa_idx][1])]) - 1)
+            filhos.append(filho)
+
+        populacao = elite + filhos
+
+    return historico
+
+hist_gen = historico_genetico()
+
+plt.figure(figsize=(10,6))
+plt.plot(hist_hill, label='Hill Climb', color='#4CAF50', linewidth=2)
+plt.plot(hist_annealing, label='Recozimento Simulado', color='#2196F3', linewidth=2)
+plt.plot(hist_gen, label='Genético', color='#FF9800', linewidth=2)
+plt.title('Evolução do Custo por Algoritmo')
+plt.xlabel('Iterações / Gerações')
+plt.ylabel('Custo (€)')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend(fontsize=12)
+plt.tight_layout()
+plt.show()
