@@ -235,7 +235,7 @@ mostrar_solucao(sol2)
 print("\n--- Algoritmo Genético ---")
 mostrar_solucao(sol3)
 
-# -------------------------------# -------------------------------
+# -------------------------------
 import matplotlib.pyplot as plt
 
 # -------------------------------
